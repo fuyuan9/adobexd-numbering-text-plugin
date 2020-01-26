@@ -16,7 +16,7 @@ const LABEL_FONT_SIZE = 19;
 const LABEL_FONT_STYLE = "Bold";
 const LABEL_TEXT_COLOR = new Color("White");
 
-function createLabel(selection, childNode, textContent) {
+function createLabel(selection, node, textContent) {
   const rect = new Rectangle();
   rect.width = LABEL_WIDTH;
   rect.height = LABEL_HEIGHT;
@@ -37,23 +37,23 @@ function createLabel(selection, childNode, textContent) {
   commands.alignVerticalCenter();
   commands.alignHorizontalCenter();
   commands.group();
-  const group = selection.items[0];
-  // FIXME: In case "repeat grid"
-  const bounds = childNode.globalBounds;
-  const deltaX = bounds.x;
+  const label = selection.items[0];
+  const bounds = node.globalBounds;
+  const parentBounds = selection.insertionParent.globalBounds;
+  const deltaX = bounds.x - parentBounds.x;
   const deltaY = bounds.y;
-  group.moveInParentCoordinates(deltaX, deltaY);
+  label.moveInParentCoordinates(deltaX, deltaY);
 
-  return group;
+  return label;
 }
 
-function findText(childNode) {
+function findTextNode(node) {
   let buff = [];
-  childNode.children.forEach(node => {
-    if (node instanceof Text) {
-      buff.push(node);
-    } else if (node.name !== NUMBERED_GROUP_NAME) {
-      buff = [...buff, ...findText(node)];
+  node.children.forEach(n => {
+    if (n instanceof Text) {
+      buff.push(n);
+    } else if (n.name !== NUMBERED_GROUP_NAME) {
+      buff = [...buff, ...findTextNode(n)];
     }
   });
 
@@ -74,8 +74,8 @@ function sortByCoordinates(nodeArray) {
 }
 
 async function main(selection) {
-  const currentSelection = selection.items;
-  if (currentSelection.length === 0) {
+  const currentSelectionItems = selection.items;
+  if (currentSelectionItems.length === 0) {
     await error(
       "Error",
       "No selected items. Please select an artboard and run."
@@ -84,9 +84,9 @@ async function main(selection) {
     return;
   }
   const rootNode = selection.insertionParent;
-  const textNodeArray = sortByCoordinates(findText(rootNode));
-  const labels = textNodeArray.map((childNode, index) => {
-    return createLabel(selection, childNode, `${index + 1}`);
+  const textNodeArray = sortByCoordinates(findTextNode(rootNode));
+  const labels = textNodeArray.map((textNode, index) => {
+    return createLabel(selection, textNode, `${index + 1}`);
   });
 
   selection.items = labels;
@@ -94,10 +94,10 @@ async function main(selection) {
   const group = selection.items[0];
   group.name = NUMBERED_GROUP_NAME;
 
-  selection.items = currentSelection;
+  selection.items = currentSelectionItems;
 
-  const data = textNodeArray.map((childNode, index) => {
-    return { id: `${index + 1}`, text: childNode.text };
+  const data = textNodeArray.map((textNode, index) => {
+    return { id: `${index + 1}`, text: textNode.text };
   });
   const json2csvParser = new Parser();
   const csv = json2csvParser.parse(data);
