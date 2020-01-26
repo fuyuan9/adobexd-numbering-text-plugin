@@ -8,8 +8,9 @@ This is a AdobeXD plugin for numbering text elements.
 
 ## TODO
 
-- [ ] Optimize number label coordinates
-- [ ] Export CSV
+- [x] Optimize number label coordinates
+- [x] Copy CSV
+- [ ] Fix repeat grid problem
 
 ## License
 

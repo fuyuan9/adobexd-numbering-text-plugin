@@ -12,7 +12,8 @@
   "author": "fuyuan9",
   "license": "MIT",
   "dependencies": {
-    "@adobe/xd-plugin-toolkit": "0.0.1"
+    "@adobe/xd-plugin-toolkit": "0.0.1",
+    "json2csv": "^4.5.4"
   },
   "private": true
 }
