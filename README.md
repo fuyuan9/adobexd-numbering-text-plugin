@@ -10,7 +10,8 @@ This is a AdobeXD plugin for numbering text elements.
 
 - [x] Optimize number label coordinates
 - [x] Copy CSV
-- [ ] Fix problem in case not home artboard
+- [x] Fix problem in case not home artboard
+- [ ] Fix problem in case multple selected artboard
 
 ## License
 

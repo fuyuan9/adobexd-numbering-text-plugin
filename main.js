@@ -7,14 +7,16 @@ const {
 const { Parser } = require("./node_modules/json2csv/dist/json2csv.umd.js");
 
 const NUMBERED_GROUP_NAME = "__NUMBERED__";
-const LABEL_WIDTH = 42;
-const LABEL_HEIGHT = 26;
+const LABEL_WIDTH = 40;
+const LABEL_HEIGHT = 24;
 const LABEL_FILL_COLOR = new Color("Red");
 const LABEL_OPACITY = 0.7;
 const LABEL_FONT_FAMILY = "Arial";
-const LABEL_FONT_SIZE = 19;
+const LABEL_FONT_SIZE = 18;
 const LABEL_FONT_STYLE = "Bold";
 const LABEL_TEXT_COLOR = new Color("White");
+const LABEL_OFFSET_X = 0;
+const LABEL_OFFSET_Y = -10;
 
 function createLabel(selection, node, textContent) {
   const rect = new Rectangle();
@@ -40,20 +42,26 @@ function createLabel(selection, node, textContent) {
   const label = selection.items[0];
   const bounds = node.globalBounds;
   const parentBounds = selection.insertionParent.globalBounds;
-  const deltaX = bounds.x - parentBounds.x;
-  const deltaY = bounds.y;
+  const deltaX = bounds.x - parentBounds.x + LABEL_OFFSET_X;
+  const deltaY = bounds.y - parentBounds.y + LABEL_OFFSET_Y;
   label.moveInParentCoordinates(deltaX, deltaY);
 
   return label;
 }
 
-function findTextNode(node) {
+function findTextNode(node, ignore) {
+  const ignoreList = Array.isArray(ignore) ? ignore : [];
   let buff = [];
   node.children.forEach(n => {
     if (n instanceof Text) {
-      buff.push(n);
+      const hasNotIgnore = ignoreList.some((item) => {
+        return !(new RegExp(item)).test(n.text);
+      });
+      if (hasNotIgnore) {
+        buff.push(n);
+      }
     } else if (n.name !== NUMBERED_GROUP_NAME) {
-      buff = [...buff, ...findTextNode(n)];
+      buff = [...buff, ...findTextNode(n, ignore)];
     }
   });
 
@@ -74,6 +82,10 @@ function sortByCoordinates(nodeArray) {
 }
 
 async function main(selection) {
+  const ignoreList = [
+    "/",
+    ">",
+  ];
   const currentSelectionItems = selection.items;
   if (currentSelectionItems.length === 0) {
     await error(
@@ -84,7 +96,7 @@ async function main(selection) {
     return;
   }
   const rootNode = selection.insertionParent;
-  const textNodeArray = sortByCoordinates(findTextNode(rootNode));
+  const textNodeArray = sortByCoordinates(findTextNode(rootNode, ignoreList));
   const labels = textNodeArray.map((textNode, index) => {
     return createLabel(selection, textNode, `${index + 1}`);
   });
